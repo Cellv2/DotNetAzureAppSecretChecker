@@ -17,6 +17,8 @@ namespace AzureAppSecretChecker
                 const string clientId = "";
                 const string clientSecret = "";
 
+                // if this is turned into a loop and the relevant permissions are added, just one single app (per tenant) can ...
+                // ... provide access to ALL apps in the directory, so calling all apps in one tenant may be avoided
                 GetSecretExpiriesAndProcessResultsAsync(tenantId, clientId, clientSecret, Display).GetAwaiter().GetResult();
             }
             catch (Exception ex)
