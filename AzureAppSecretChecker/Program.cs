@@ -51,7 +51,7 @@ namespace AzureAppSecretChecker
                 foreach (var app in allApplications)
                 {
                     var passwordCredentials = app.PasswordCredentials;
-                    if (passwordCredentials.Any())
+                    if (app.AppId == clientId && passwordCredentials.Any())
                     {
                         // there can be more than one credential in each app
                         foreach (PasswordCredential passwordCredential in passwordCredentials)
@@ -61,7 +61,7 @@ namespace AzureAppSecretChecker
                             obj.Add("ApplicationId", app.AppId);
                             obj.Add("ObjectId", app.Id);
                             obj.Add("Domain", app.PublisherDomain);
-                            //descirption
+                            // descirption
                             obj.Add("DisplayName", passwordCredential.DisplayName);
                             obj.Add("EndDateTime", passwordCredential.EndDateTime);
                             // first 3 characters of the secret
