@@ -20,6 +20,7 @@ namespace AzureAppSecretChecker
             {
                 try
                 {
+                    // TODO: think about trying to avoid multiple calls to a single tenant
                     GetSecretExpiriesAndProcessResultsAsync(azureAppCredential.TenantId, azureAppCredential.ClientId, azureAppCredential.ClientSecret, Display).GetAwaiter().GetResult();
                 }
                 catch (Exception ex)
