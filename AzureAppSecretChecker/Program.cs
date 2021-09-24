@@ -2,6 +2,7 @@
 using Microsoft.Graph;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -11,20 +12,24 @@ namespace AzureAppSecretChecker
     {
         static void Main(string[] args)
         {
-            try
-            {
-                const string tenantId = "";
-                const string clientId = "";
-                const string clientSecret = "";
 
-                GetSecretExpiriesAndProcessResultsAsync(tenantId, clientId, clientSecret, Display).GetAwaiter().GetResult();
-            }
-            catch (Exception ex)
+            List<AzureAppCredential> azureAppCredentials = new List<AzureAppCredential>();
+            azureAppCredentials.Add(new AzureAppCredential { ClientId = "", ClientSecret = "", TenantId = "" });
+
+            foreach (AzureAppCredential azureAppCredential in azureAppCredentials)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine(ex.Message);
-                Console.ResetColor();
+                try
+                {
+                    GetSecretExpiriesAndProcessResultsAsync(azureAppCredential.TenantId, azureAppCredential.ClientId, azureAppCredential.ClientSecret, Display).GetAwaiter().GetResult();
+                }
+                catch (Exception ex)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine(ex.Message);
+                    Console.ResetColor();
+                }
             }
+
 
             Console.WriteLine("Press any key to exit");
             Console.ReadKey();
@@ -98,5 +103,6 @@ namespace AzureAppSecretChecker
 
             Console.WriteLine("-----");
         }
+
     }
 }
