@@ -11,7 +11,6 @@ namespace AzureAppSecretChecker.Services
 {
     public interface IMicrosoftGraphService
     {
-        Task<List<PasswordCredential>> GetSecretExpiriesAsync(AzureAppCredential azureAppCredential, Action<JObject> processResult);
-        Task GetSecretExpiriesAsync(List<AzureAppCredential> azureAppCredentials);
+        Task<List<AzureAppSecretInfo>> GetAppSecretInfoAsync(AzureAppCredential azureAppCredential);
     }
 }

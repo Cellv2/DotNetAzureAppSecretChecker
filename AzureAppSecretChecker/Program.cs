@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using AzureAppSecretChecker.Services;
+using AzureAppSecretChecker.Cli;
 
 namespace AzureAppSecretChecker
 {
@@ -15,8 +16,8 @@ namespace AzureAppSecretChecker
     {
         static void Main(string[] args)
         {
-
             IMicrosoftGraphService microsoftGraphService = new MicrosoftGraphService();
+            IDisplay display = new Display();
 
             List<AzureAppCredential> azureAppCredentials = new List<AzureAppCredential>();
             azureAppCredentials.Add(new AzureAppCredential { ClientId = "", ClientSecret = "", TenantId = "" });
@@ -26,8 +27,8 @@ namespace AzureAppSecretChecker
                 try
                 {
                     // TODO: think about trying to avoid multiple calls to a single tenant
-                    // TODO: Move display out of the msgraph service
-                    List<PasswordCredential> passwordCredentials = microsoftGraphService.GetSecretExpiriesAsync(azureAppCredential, Display).GetAwaiter().GetResult();
+                    List<AzureAppSecretInfo> passwordCredentials = microsoftGraphService.GetAppSecretInfoAsync(azureAppCredential).GetAwaiter().GetResult();
+                    display.ProcessAndDisplayAppSecrets(passwordCredentials);
                 }
                 catch (Exception ex)
                 {
@@ -41,16 +42,5 @@ namespace AzureAppSecretChecker
             Console.WriteLine("Press any key to exit");
             Console.ReadKey();
         }
-
-        private static void Display(JObject result)
-        {
-            foreach (JProperty child in result.Properties().Where(p => !p.Name.StartsWith("@")))
-            {
-                Console.WriteLine($"{child.Name} = {child.Value}");
-            }
-
-            Console.WriteLine("-----");
-        }
-
     }
 }

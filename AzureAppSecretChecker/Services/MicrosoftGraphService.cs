@@ -14,7 +14,7 @@ namespace AzureAppSecretChecker.Services
     {
         // Please note that this may still return multiple secrets
         // TODO: pretty sure that MsGraph always returns the hint? Wasn't it only AadGraph which doesn't?
-        public async Task<List<PasswordCredential>> GetSecretExpiriesAsync(AzureAppCredential azureAppCredential, Action<JObject> processResult)
+        public async Task<List<AzureAppSecretInfo>> GetAppSecretInfoAsync(AzureAppCredential azureAppCredential)
         {
             string tenantId = azureAppCredential.TenantId;
             string clientId = azureAppCredential.ClientId;
@@ -36,7 +36,7 @@ namespace AzureAppSecretChecker.Services
                 var graphClient = new GraphServiceClient(clientSecretCredential, scopes);
                 var allApplications = await graphClient.Applications.Request().GetAsync();
 
-                List<PasswordCredential> appSecrets = new List<PasswordCredential>();
+                List<AzureAppSecretInfo> appSecrets = new List<AzureAppSecretInfo>();
 
                 foreach (Application app in allApplications)
                 {
@@ -46,20 +46,18 @@ namespace AzureAppSecretChecker.Services
                         // there can be more than one credential in each app
                         foreach (PasswordCredential passwordCredential in passwordCredentials)
                         {
-                            appSecrets.Add(passwordCredential);
+                            string stringEndDateTime = passwordCredential.EndDateTime.HasValue ? passwordCredential.EndDateTime.Value.ToString() : "";
 
-                            // TODO: Remove the processResult and move it somewhere more sensible
-                            JObject obj = new JObject();
-                            obj.Add("TenantId", tenantId);
-                            obj.Add("ApplicationId", app.AppId);
-                            obj.Add("ObjectId", app.Id);
-                            obj.Add("Domain", app.PublisherDomain);
-                            // descirption
-                            obj.Add("DisplayName", passwordCredential.DisplayName);
-                            obj.Add("EndDateTime", passwordCredential.EndDateTime);
-                            // first 3 characters of the secret
-                            obj.Add("SecretHint", passwordCredential.Hint);
-                            processResult(obj);
+                            appSecrets.Add(new AzureAppSecretInfo
+                            {
+                                ApplicationId = app.AppId,
+                                DisplayName = passwordCredential.DisplayName,
+                                Domain = app.PublisherDomain,
+                                EndDateTime = stringEndDateTime,
+                                ObjectId = app.Id,
+                                SecretHint = passwordCredential.Hint,
+                                TenantId = tenantId
+                            });
                         }
                     }
                 }
@@ -86,12 +84,7 @@ namespace AzureAppSecretChecker.Services
 
                 return null;
             }
-        
-    }
 
-        public async Task GetSecretExpiriesAsync(List<AzureAppCredential> azureAppCredentials)
-        {
-            throw new NotImplementedException();
         }
     }
 }
