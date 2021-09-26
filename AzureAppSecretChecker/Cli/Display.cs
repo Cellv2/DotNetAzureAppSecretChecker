@@ -12,10 +12,20 @@ namespace AzureAppSecretChecker.Cli
     {
         public void ProcessAndDisplayAppSecrets(List<AzureAppSecretInfo> appSecretInfos)
         {
-            foreach(AzureAppSecretInfo appSecretInfo in appSecretInfos)
+            if (!appSecretInfos.Any())
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("Result did not contain any information. This probably shouldn't happen");
+                Console.ResetColor();
+
+                return;
+            }
+
+            foreach (AzureAppSecretInfo appSecretInfo in appSecretInfos)
             {
                 OutputSecretInfoToConsole(JObject.FromObject(appSecretInfo));
             }
+
         }
 
         private void OutputSecretInfoToConsole(JObject result)
