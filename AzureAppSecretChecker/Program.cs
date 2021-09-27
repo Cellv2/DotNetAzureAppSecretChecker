@@ -65,6 +65,8 @@ namespace AzureAppSecretChecker
 
 
                 var targetApp = targetAppCollection.FirstOrDefault();
+                if (targetApp == null) { throw new Exception($"The connection to MS Graph was successful, but the requested clientId ({clientId}) was not found"); }
+
                 var passwordCredentials = targetApp.PasswordCredentials;
                 if (passwordCredentials.Any())
                 {
