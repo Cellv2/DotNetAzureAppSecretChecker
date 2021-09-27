@@ -31,7 +31,6 @@ namespace AzureAppSecretChecker
                 }
             }
 
-
             Console.WriteLine("Press any key to exit");
             Console.ReadKey();
         }
@@ -52,28 +51,37 @@ namespace AzureAppSecretChecker
                     tenantId, clientId, clientSecret, options);
 
                 var graphClient = new GraphServiceClient(clientSecretCredential, scopes);
-                var allApplications = await graphClient.Applications.Request().GetAsync();
 
-                foreach (var app in allApplications)
+                // there should only ever be one match for a specific appId, so top 1 is taken
+                // if the appId does not exist, then we should have an error by this point (in the clientSecretCredential creation)
+                // required permissions: https://docs.microsoft.com/en-us/graph/api/application-list?view=graph-rest-1.0#permissions
+                IGraphServiceApplicationsCollectionPage targetAppCollection = await graphClient.Applications
+                    .Request()
+                    .Header("ConsistencyLevel", "eventual")
+                    // filtering does not care for upper or lower case. Filter docs: https://docs.microsoft.com/en-us/graph/aad-advanced-queries#application-properties
+                    .Filter($"appId eq '{clientId}'")
+                    .Top(1)
+                    .GetAsync();
+
+
+                var targetApp = targetAppCollection.FirstOrDefault();
+                var passwordCredentials = targetApp.PasswordCredentials;
+                if (passwordCredentials.Any())
                 {
-                    var passwordCredentials = app.PasswordCredentials;
-                    if (app.AppId == clientId && passwordCredentials.Any())
+                    // there can be more than one credential in each app
+                    foreach (PasswordCredential passwordCredential in passwordCredentials)
                     {
-                        // there can be more than one credential in each app
-                        foreach (PasswordCredential passwordCredential in passwordCredentials)
-                        {
-                            JObject obj = new JObject();
-                            obj.Add("TenantId", tenantId);
-                            obj.Add("ApplicationId", app.AppId);
-                            obj.Add("ObjectId", app.Id);
-                            obj.Add("Domain", app.PublisherDomain);
-                            // descirption
-                            obj.Add("DisplayName", passwordCredential.DisplayName);
-                            obj.Add("EndDateTime", passwordCredential.EndDateTime);
-                            // first 3 characters of the secret
-                            obj.Add("SecretHint", passwordCredential.Hint);
-                            processResult(obj);
-                        }
+                        JObject obj = new JObject();
+                        obj.Add("TenantId", tenantId);
+                        obj.Add("ApplicationId", targetApp.AppId);
+                        obj.Add("ObjectId", targetApp.Id);
+                        obj.Add("Domain", targetApp.PublisherDomain);
+                        // descirption
+                        obj.Add("DisplayName", passwordCredential.DisplayName);
+                        obj.Add("EndDateTime", passwordCredential.EndDateTime);
+                        // first 3 characters of the secret
+                        obj.Add("SecretHint", passwordCredential.Hint);
+                        processResult(obj);
                     }
                 }
             }
